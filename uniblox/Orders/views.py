@@ -6,6 +6,8 @@ from Discounts.views import check_and_create_discount, set_discount_inactive
 from uniblox.utils.db import run_sql_query
 from .models import Orders
 from .serializers import OrderSerializer
+from rest_framework.decorators import api_view
+from django.views.decorators.csrf import csrf_exempt
 
 """
 The transaction id is usually derived from payment gateway such as Razorpay if used.
@@ -13,7 +15,6 @@ Here I am generating a random transaction id for the sake of this project.
 """
 def get_unique_transaction_id():
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
-
 
 
 def create_orders(new_order_data, discount):
@@ -44,7 +45,7 @@ class OrdersView(APIView):
                 SELECT transaction_id, order_total, product_name, product_price, order_qty, order_date 
                 FROM `Orders_orders` as o JOIN `Products_product` AS p
                 ON o.product_id_id=p.product_id
-                ORDER BY order_id LIMIT 100
+                ORDER BY order_id
             """
             results = run_sql_query(query)
             orders_data = {}
@@ -87,3 +88,33 @@ class OrdersView(APIView):
             print(str(e))
             return JsonResponse({"error": str(e)}, status=400)
         
+@api_view(['GET'])
+@csrf_exempt
+def get_admin_orders(request):
+    try:
+        query = """
+            SELECT id, email, transaction_id, order_total, product_name, product_price, order_qty, order_date 
+            FROM `Orders_orders` as o 
+            JOIN `Products_product` AS p ON o.product_id_id=p.product_id
+            JOIN `auth_user` AS u ON o.user_id_id=u.id
+            ORDER BY id, order_id
+        """
+        results = run_sql_query(query)
+        orders_data = []
+        for result in results:
+            order_data = {
+                "id": result[0],
+                "email": result[1],
+                "transaction_id": result[2],
+                "order_total": result[3],
+                "product_name": result[4],
+                "product_price": result[5],
+                "order_qty": result[6],
+                "order_date": result[7].strftime("%b %d, %I:%M %p"),
+            }
+            orders_data.append(order_data)
+            
+        return JsonResponse(orders_data, safe=False)
+    except Exception as e:
+        print(str(e))
+        return JsonResponse({"error": str(e)}, status=400)
