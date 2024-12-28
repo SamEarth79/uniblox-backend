@@ -7,3 +7,4 @@ class Product(models.Model):
     product_price = models.FloatField()
     product_description = models.TextField()
     stock = models.IntegerField()
+    product_image = models.CharField(max_length=255)    # Usually images are stored in S3 and their urls are stored in database (NoSQL preferrably)

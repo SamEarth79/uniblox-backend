@@ -165,3 +165,5 @@ CORS_ALLOW_HEADERS = (
 )
 
 CORS_EXPOSE_HEADERS = ['Content-Disposition']
+
+DISCOUNT_STEP = 3       # Discount for every nth order
