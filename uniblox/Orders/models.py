@@ -7,8 +7,9 @@ from Products.models import Product
 class Orders(models.Model):
     order_id = models.AutoField(primary_key=True)
     user_id = models.ForeignKey(User, on_delete=models.CASCADE)
-    discount_id = models.ForeignKey(Discount, on_delete=models.DO_NOTHING)
-    order_total = models.FloatField()
+    discount_id = models.ForeignKey(Discount, on_delete=models.DO_NOTHING, null=True)
     transaction_id = models.CharField(max_length=255)
+    order_total = models.FloatField()
+    order_qty = models.IntegerField()
     order_date = models.DateTimeField(auto_now_add=True)
     product_id = models.ForeignKey(Product, on_delete=models.DO_NOTHING, default=None)
