@@ -1,11 +1,10 @@
-from django.conf import settings
-from django.shortcuts import render
 from rest_framework.views import APIView
 import random
 import string
 from django.http import JsonResponse
-from Discounts.views import check_and_create_discount, create_discount_after_nth_order, set_discount_inactive
+from Discounts.views import check_and_create_discount, set_discount_inactive
 from uniblox.utils.db import run_sql_query
+from .models import Orders
 from .serializers import OrderSerializer
 
 """
@@ -38,8 +37,39 @@ def create_orders(new_order_data, discount):
             raise Exception(serializer.errors)
 
 
-
 class OrdersView(APIView):
+    def get(self, request):
+        try:
+            query = """
+                SELECT transaction_id, order_total, product_name, product_price, order_qty, order_date 
+                FROM `Orders_orders` as o JOIN `Products_product` AS p
+                ON o.product_id_id=p.product_id
+                ORDER BY order_id LIMIT 100
+            """
+            results = run_sql_query(query)
+            orders_data = {}
+            for result in results:
+                transaction_id = result[0]
+                if transaction_id not in orders_data:
+                    orders_data[transaction_id] = {
+                        "transaction_id": transaction_id,
+                        "order_total": 0,
+                        "order_date": result[5].strftime("%b %d, %I:%M %p"),
+                        "products": []
+                    }
+                orders_data[transaction_id]["order_total"] += result[1]
+                orders_data[transaction_id]["products"].append({
+                    "product_name": result[2],
+                    "product_price": result[3],
+                    "order_qty": result[4],
+                })
+            
+                
+            return JsonResponse(orders_data, safe=False)
+        except Exception as e:
+            print(str(e))
+            return JsonResponse({"error": str(e)}, status=400)
+    
     def post(self, request):
         try:
             new_order_data = request.data.get("new_order_data", None)
