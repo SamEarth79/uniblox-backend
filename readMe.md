@@ -2,6 +2,16 @@
 
 This is the backend for the Uniblox project, built using Django.
 
+This backend contains following APIs
+1. Get Products
+2. Get Orders
+3. Post Orders (create)
+4. Get Discounts
+5. Post Discounts (create)
+6. Get Admin Orders
+7. Get Admin Products
+8. Get Admin Discounts
+
 ## Installation
 
 1. Clone the repository:
