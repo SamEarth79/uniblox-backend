@@ -16,7 +16,9 @@ Here I am generating a random transaction id for the sake of this project.
 def get_unique_transaction_id():
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
-
+"""
+Add orders to the database
+"""
 def create_orders(new_order_data, discount):
     if new_order_data is None:
         raise Exception("No data provided")
@@ -39,6 +41,9 @@ def create_orders(new_order_data, discount):
 
 
 class OrdersView(APIView):
+    """
+    Get orders summary for admin page
+    """
     def get(self, request):
         try:
             query = """
@@ -77,6 +82,9 @@ class OrdersView(APIView):
             print(str(e))
             return JsonResponse({"error": str(e)}, status=400)
     
+    """
+    Place new order/Checkout API
+    """
     def post(self, request):
         try:
             new_order_data = request.data.get("new_order_data", None)
@@ -95,6 +103,9 @@ class OrdersView(APIView):
             print(str(e))
             return JsonResponse({"error": str(e)}, status=400)
         
+"""
+Get all discounts and applied discounts for Admin Summary
+"""
 @api_view(['GET'])
 @csrf_exempt
 def get_admin_orders(request):
@@ -128,29 +139,4 @@ def get_admin_orders(request):
         print(str(e))
         return JsonResponse({"error": str(e)}, status=400)
 
-@api_view(['GET'])
-@csrf_exempt
-def get_admin_products(request):
-    try:
-        query = """
-            SELECT product_id, product_name, COUNT(order_id), SUM(order_qty) AS total_ordered_qty, SUM(order_total)
-            FROM `Orders_orders` as o 
-            JOIN `Products_product` AS p ON o.product_id_id=p.product_id
-            GROUP BY product_id
-            ORDER BY total_ordered_qty DESC
-        """
-        results = run_sql_query(query)
-        products_data = []
-        for result in results:
-            product_data = {
-                "product_id": result[0],
-                "product_name": result[1],
-                "total_orders": result[2],
-                "total_ordered_qty": result[3],
-                "total_sales": result[4],
-            }
-            products_data.append(product_data)
-        return JsonResponse(products_data, safe=False)
-    except Exception as e:
-        print(str(e))
-        return JsonResponse({"error": str(e)}, status=400)
+
