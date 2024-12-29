@@ -41,7 +41,6 @@ INSTALLED_APPS = [
     'Products',
     'Orders',
     'Discounts',
-    'Cart'
 ]
 
 MIDDLEWARE = [
@@ -167,3 +166,4 @@ CORS_ALLOW_HEADERS = (
 CORS_EXPOSE_HEADERS = ['Content-Disposition']
 
 DISCOUNT_STEP = 3       # Discount for every nth order
+NTH_ORDER_DISCOUNT = 10 # Discount percentage for every nth order

@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 import random
 import string
 from django.http import JsonResponse
-from Discounts.views import check_and_create_discount, set_discount_inactive
+from Discounts.views import DiscountService
 from uniblox.utils.db import run_sql_query
 from .models import Orders
 from .serializers import OrderSerializer
@@ -84,10 +84,11 @@ class OrdersView(APIView):
             
             create_orders(new_order_data, discount) 
             
+            discount_service = DiscountService()
             if discount:
-                set_discount_inactive(discount["discount_id"])
+                discount_service.set_discount_inactive(discount["discount_id"])
             
-            check_and_create_discount(user_id=1)
+            discount_service.check_and_create_discount(user_id=1)
             
             return JsonResponse({"message": "Order placed successfully"}, status=201)
         except Exception as e:

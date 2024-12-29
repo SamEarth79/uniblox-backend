@@ -8,34 +8,53 @@ from django.contrib.auth.models import User
 from rest_framework.decorators import api_view
 from django.views.decorators.csrf import csrf_exempt
 
-def create_discount_after_nth_order(user_id):
-    user = User.objects.get(id=user_id)
-    discount = Discount(discount_code="UNI10", discount_percentage=10, user_id=user, status=False)
-    discount.save()
+class DiscountService:
+    def __init__(self):
+        pass
 
-def get_total_customer_transactions(user_id):
-    query = f"""
-        SELECT COUNT(DISTINCT(transaction_id)) 
-        FROM Orders_orders 
-        WHERE user_id_id={user_id}
     """
-    results = run_sql_query(query)
-    return results[0][0]
-
-def check_and_create_discount(user_id):
-    total_transactions = get_total_customer_transactions(user_id)
-    if (total_transactions+1) % settings.DISCOUNT_STEP == 0:        # For every nth order, discount is applied
-        create_discount_after_nth_order(1)
-
-def set_discount_inactive(discount_id):
-    query = f"""
-        UPDATE Discounts_discount
-        SET status=1
-        WHERE discount_id={discount_id}
+    Create a discount for a user
     """
-    run_sql_query(query)
+    def create_discount(self, user_id, percentage):
+        user = User.objects.get(id=user_id)
+        discount = Discount(discount_code="UNI10", discount_percentage=percentage, user_id=user, status=False)
+        discount.save()
+
+    """
+    Get total number of transactions for a user
+    """
+    def get_total_customer_transactions(self, user_id):
+        query = f"""
+            SELECT COUNT(DISTINCT(transaction_id)) 
+            FROM Orders_orders 
+            WHERE user_id_id={user_id}
+        """
+        results = run_sql_query(query)
+        return results[0][0]
+
+    """
+    Check if a discount is to be created for a user after a transaction
+    """
+    def check_and_create_discount(self, user_id):
+        total_transactions = self.get_total_customer_transactions(user_id)
+        if (total_transactions+1) % settings.DISCOUNT_STEP == 0:        # For every nth order, discount is applied
+            self.create_discount(1, settings.NTH_ORDER_DISCOUNT)
+
+    """
+    Sets a discount as inactive after it has been used
+    """
+    def set_discount_inactive(self, discount_id):
+        query = f"""
+            UPDATE Discounts_discount
+            SET status=1
+            WHERE discount_id={discount_id}
+        """
+        run_sql_query(query)
 
 class DiscountView(APIView):
+    """
+    Gets all discounts or a specific discount by coupon code
+    """
     def get(self, request):
         coupon_code = request.query_params.get('couponCode', None)
         if coupon_code:
@@ -51,6 +70,9 @@ class DiscountView(APIView):
         serializer = DiscountSerializer(discounts, many=True)
         return JsonResponse(serializer.data, safe=False)
     
+    """
+    Creates a discount for a user, given the eamail, discount code and discount percentage
+    """
     def post(self, request):
         email = request.data.get("email")
         user = User.objects.get(email=email)
@@ -66,6 +88,9 @@ class DiscountView(APIView):
             return JsonResponse(serializer.data, safe=False, status=201)
         return JsonResponse(serializer.errors, status=400)
     
+"""
+Get all discounts and applied discounts for Admin Summary
+"""
 @api_view(['GET'])
 @csrf_exempt
 def get_admin_discounts(request):
