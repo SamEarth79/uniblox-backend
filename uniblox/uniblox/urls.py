@@ -16,11 +16,15 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from Products.views import ProductView
-from Orders.views import OrdersView, get_admin_orders
+from Orders.views import OrdersView, get_admin_orders, get_admin_products
+from Discounts.views import DiscountView, get_admin_discounts
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('products/', ProductView.as_view()),
-    path('orders/', OrdersView.as_view()),
-    path('adminorders/', get_admin_orders, name='admin_orders')
+    path('products/', ProductView.as_view(), name='products'),
+    path('orders/', OrdersView.as_view(), name='orders'),
+    path('discounts/', DiscountView.as_view(), name='discounts'),
+    path('adminorders/', get_admin_orders, name='admin_orders'),
+    path('adminproducts/', get_admin_products, name='admin_products'),
+    path('admindiscounts/', get_admin_discounts, name='admin_discounts'),
 ]
