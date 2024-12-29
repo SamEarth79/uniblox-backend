@@ -51,6 +51,21 @@ class DiscountView(APIView):
         serializer = DiscountSerializer(discounts, many=True)
         return JsonResponse(serializer.data, safe=False)
     
+    def post(self, request):
+        email = request.data.get("email")
+        user = User.objects.get(email=email)
+        data = {
+            "discount_code": request.data.get("discount_code"),
+            "discount_percentage": request.data.get("discount_percentage"),
+            "user_id": user.id,
+            "status": False,
+        }
+        serializer = DiscountSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return JsonResponse(serializer.data, safe=False, status=201)
+        return JsonResponse(serializer.errors, status=400)
+    
 @api_view(['GET'])
 @csrf_exempt
 def get_admin_discounts(request):
@@ -72,7 +87,7 @@ def get_admin_discounts(request):
             })
 
         query = """
-            SELECT discount_code, discount_percentage, email, order_total
+            SELECT discount_code, discount_percentage, email, order_total, transaction_id
             FROM `Discounts_discount` AS d
             JOIN `Orders_orders` AS o ON d.discount_id=o.discount_id_id
             JOIN `auth_user` AS u ON u.id=o.user_id_id
@@ -84,7 +99,8 @@ def get_admin_discounts(request):
                 "discount_code": result[0],
                 "discount_percentage": result[1],
                 "email": result[2],
-                "order_total": result[3]
+                "order_total": result[3],
+                "transaction_id": result[4],
             })
 
         data = {

@@ -42,9 +42,10 @@ class OrdersView(APIView):
     def get(self, request):
         try:
             query = """
-                SELECT transaction_id, order_total, product_name, product_price, order_qty, order_date 
-                FROM `Orders_orders` as o JOIN `Products_product` AS p
-                ON o.product_id_id=p.product_id
+                SELECT transaction_id, order_total, product_name, product_price, order_qty, order_date, discount_id, discount_code, discount_percentage
+                FROM `Orders_orders` as o 
+                JOIN `Products_product` AS p ON o.product_id_id=p.product_id
+                LEFT JOIN `Discounts_discount` AS d ON o.discount_id_id=d.discount_id
                 ORDER BY order_id
             """
             results = run_sql_query(query)
@@ -56,6 +57,11 @@ class OrdersView(APIView):
                         "transaction_id": transaction_id,
                         "order_total": 0,
                         "order_date": result[5].strftime("%b %d, %I:%M %p"),
+                        "discount": {
+                            "discount_id": result[6],
+                            "discount_code": result[7],
+                            "discount_percentage": result[8]
+                        },
                         "products": []
                     }
                 orders_data[transaction_id]["order_total"] += result[1]
@@ -93,10 +99,11 @@ class OrdersView(APIView):
 def get_admin_orders(request):
     try:
         query = """
-            SELECT id, email, transaction_id, order_total, product_name, product_price, order_qty, order_date 
+            SELECT id, email, transaction_id, order_total, product_name, product_price, order_qty, order_date, discount_percentage
             FROM `Orders_orders` as o 
             JOIN `Products_product` AS p ON o.product_id_id=p.product_id
             JOIN `auth_user` AS u ON o.user_id_id=u.id
+            LEFT JOIN `Discounts_discount` AS d ON o.discount_id_id=d.discount_id
             ORDER BY id, order_id
         """
         results = run_sql_query(query)
@@ -111,6 +118,7 @@ def get_admin_orders(request):
                 "product_price": result[5],
                 "order_qty": result[6],
                 "order_date": result[7].strftime("%b %d, %I:%M %p"),
+                "discount_percentage": result[8],
             }
             orders_data.append(order_data)
             
